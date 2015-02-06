@@ -3,5 +3,6 @@
 .DS_Store
 *.swp
 *.key
+*.sqlkey
 *.p12
 *.pyc

@@ -1,11 +1,19 @@
-__author__ = 'jimmy1'
+"""
+A set of tests for our token server.
+Twitter: @jimmysthoughts
+GitHub: github.com/jamesfe
+"""
+
 
 import unittest
-from token_server import get_free_token, init_db
+from token_server import init_db, get_token
 
 
 class MyTestCase(unittest.TestCase):
-    def __init__(self):
+    """
+    Get some tokens, set some tokens, load tokens, test everything.
+    """
+    def setUp(self):
         """
         initialize the database
         :return:
@@ -17,7 +25,8 @@ class MyTestCase(unittest.TestCase):
         Check to see if we get accurate tokens from the db server.
         :return:
         """
-        self.assertEqual(True, False)
+        token = get_token('instagram')
+        self.assertNotEqual(token, None)
 
 
 if __name__ == '__main__':

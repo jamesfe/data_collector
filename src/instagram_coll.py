@@ -11,22 +11,23 @@ class InstagramColl(DataCollector):
     """
     class to collect instagram stuff
     """
-    def __init__(self, latitude, longitude, dist):
+    def __init__(self, latitude, longitude, distance):
         """
         initialize some stuff here
         """
         super(InstagramColl, self).__init__()
         self.latitude = latitude
         self.longitude = longitude
-        self.distance = dist
-        self.key = self.getkey()
+        self.distance = distance
+        self.access_token = self.getkey()
 
     def getkey(self):
         """
         Open the keys directory, extract a token
         :return:
         """
-
+        # TODO: Set access token here.
+        return -1 + self.distance
 
     def pull_data(self):
         """

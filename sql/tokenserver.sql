@@ -10,7 +10,8 @@ CREATE TABLE `tokens` (
 
 
 CREATE TABLE `tokenuse` (
-	`usage_time` TEXT,
+  `application` TEXT,
+	`usage_time` REAL,
 	`tokenid`	TEXT,
 	`useid`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE
 );

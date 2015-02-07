@@ -1,14 +1,16 @@
 """
-A server that serves tokens.
+A server that serves tokens for the gathering of social media.
+Twitter: @jimmysthoughts
+GitHub: github.com/jamesfe
 """
 
 from flask import Flask
-import json
 from os import listdir
 from os.path import isfile, join
 import sqlite3
+import time
 
-app = Flask(__name__)
+FLASK_APP = Flask(__name__)
 
 SCHEMAFILE = '../sql/tokenserver.sql'
 TOKENDB = './tokens.db'
@@ -16,23 +18,33 @@ KEYDIR = '../keys/'
 CONN = None
 
 
-@app.route('/<application>/gettoken/')
-def get_instagram_token(application):
+@FLASK_APP.route('/<application>/gettoken/')
+def get_token(application):
     """
     Get a token for instagram and send it back.
     :return:
     """
+    curs = dbconnect()
+    sql = "select * from tokens WHERE application=%s"
+    curs.execute(sql, (application, ))
+    res = curs.fetchall()
     # return a token.
     return -1
 
-@app.route("/<application>/use/")
-def increment_app(application):
+@FLASK_APP.route("/<application>/use/<tokenid>")
+def increment_app(application, tokenid):
     """
     increment a generic app up once
     :param application:
     :return:
     """
-    increment_app(application)
+    curs = dbconnect()
+    currepoch = time.time()
+    sql = "INSERT INTO tokenuse (application, tokenid, usage_time) VALUE (%, %s, %s)"
+    data = (application, tokenid, currepoch)
+    curs.execute(sql, data)
+    return curs.fetchone()
+
 
 def dbconnect():
     """
@@ -66,8 +78,8 @@ def init_db(tgt_db=TOKENDB):
     :return:
     """
     if not isfile(tgt_db):
-        with open(SCHEMAFILE) as f:
-            sql_build_db = f.read()
+        with open(SCHEMAFILE) as infile:
+            sql_build_db = infile.read()
         conn = sqlite3.connect(tgt_db)
         curs = conn.cursor()
         curs.executescript(sql_build_db)

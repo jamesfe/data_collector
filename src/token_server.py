@@ -15,25 +15,24 @@ TOKENDB = './tokens.db'
 KEYDIR = '../keys/'
 CONN = None
 
-@app.route('/flickr/')
-def get_flickr_token():
-    """
-    Get a token for flickr and send it back.
-    :return:
-    """
-    res = -1
-    return json.dumps(res)
-    return 'no tokens'
 
-
-@app.route('/instagram/')
-def get_instagram_token():
+@app.route('/<application>/gettoken/')
+def get_instagram_token(application):
     """
     Get a token for instagram and send it back.
     :return:
     """
-    pass
+    # return a token.
+    return -1
 
+@app.route("/<application>/use/")
+def increment_app(application):
+    """
+    increment a generic app up once
+    :param application:
+    :return:
+    """
+    increment_app(application)
 
 def dbconnect():
     """
@@ -43,6 +42,8 @@ def dbconnect():
     if CONN is None:
         global CONN
         CONN = sqlite3.connect(TOKENDB)
+        CONN.row_factory = sqlite3.Row
+    return CONN.cursor()
 
 
 def load_keys():
@@ -59,14 +60,22 @@ def load_keys():
         cursor.executescript(sql_stmt)
 
 
-if __name__ == '__main__':
-    if not isfile(TOKENDB):
+def init_db(tgt_db=TOKENDB):
+    """
+    If a DB doens't already exist, just create one.
+    :return:
+    """
+    if not isfile(tgt_db):
         with open(SCHEMAFILE) as f:
             sql_build_db = f.read()
-        conn = sqlite3.connect(TOKENDB)
+        conn = sqlite3.connect(tgt_db)
         curs = conn.cursor()
         curs.executescript(sql_build_db)
         conn.close()
+
+
+if __name__ == '__main__':
+    init_db()
     load_keys()
 
     # app.run()

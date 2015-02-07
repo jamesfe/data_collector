@@ -4,13 +4,13 @@ CREATE TABLE `tokens` (
 	`secret`	TEXT,
 	`username`	TEXT,
   `token` TEXT,
+  `use_period` INTEGER,
 	`tokenid`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE
 );
 
 
 CREATE TABLE `tokenuse` (
-	`min_period`	INTEGER,
-	`usage`	INTEGER,
+	`usage_time` TEXT,
 	`tokenid`	TEXT,
 	`useid`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE
 );

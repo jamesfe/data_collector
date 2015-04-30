@@ -6,16 +6,15 @@ GitHub: github.com/jamesfe
 
 from flask import Flask
 from os import listdir
-from os.path import isfile, join
-import sqlite3
+from os.path import join
+import psycopg2
+import psycopg2.extras
 import time
 
 FLASK_APP = Flask(__name__)
 
-SCHEMAFILE = '../sql/tokenserver.sql'
-TOKENDB = './tokens.db'
 KEYDIR = '../keys/'
-CONN = None
+SCHEMAFILE = "../sql/tokenserver.sql"
 
 
 @FLASK_APP.route('/<application>/gettoken/')
@@ -24,12 +23,25 @@ def get_token(application):
     Get a token for instagram and send it back.
     :return:
     """
-    curs = dbconnect()
-    sql = "select * from tokens WHERE application=%s"
+    conn, curs = dbconnect()
+
+    sql = "select token_id, use_period_secs, max_uses, client, application, secret," \
+          "username, token from tokens WHERE application=%s"
     curs.execute(sql, (application, ))
-    res = curs.fetchall()
-    # return a token.
+    token_results = curs.fetchall()
+    # Given some number of uses of the token, we
+    for res in token_results:
+        print res
+        tokenid = res[0]
+        usage_cutoff = int(time.time()) - res[1]
+        usage_sql = "SELECT COUNT(*) as num_uses FROM token_use WHERE token_id=%s AND usage_time > %s"
+
+        curs.execute(usage_sql, (tokenid, usage_cutoff))
+        num_uses = curs.fetchone()[0]
+        if num_uses < res[2]:
+            return res
     return -1
+
 
 @FLASK_APP.route("/<application>/use/<tokenid>")
 def increment_app(application, tokenid):
@@ -38,9 +50,10 @@ def increment_app(application, tokenid):
     :param application:
     :return:
     """
-    curs = dbconnect()
+    conn, curs = dbconnect()
+
     currepoch = time.time()
-    sql = "INSERT INTO tokenuse (application, tokenid, usage_time) VALUE (%, %s, %s)"
+    sql = "INSERT INTO token_use (application, tokenid, usage_time) VALUE (%, %s, %s)"
     data = (application, tokenid, currepoch)
     curs.execute(sql, data)
     return curs.fetchone()
@@ -51,11 +64,13 @@ def dbconnect():
     connect to the db
     :return:
     """
-    if CONN is None:
-        global CONN
-        CONN = sqlite3.connect(TOKENDB)
-        CONN.row_factory = sqlite3.Row
-    return CONN.cursor()
+
+    conn_str = "dbname='jimmy1' user='jimmy1' " \
+               "host='localhost' " \
+               "port='5432' "
+    conn = psycopg2.connect(conn_str)
+    curs = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    return conn, curs
 
 
 def load_keys():
@@ -63,27 +78,26 @@ def load_keys():
     Load a set of keys from various databases
     :return:
     """
-    dbconnect()
+    conn, curs = dbconnect()
+
     keys = [_ for _ in listdir(KEYDIR) if _[-6:].lower() == 'sqlkey']
-    cursor = CONN.cursor()
     for key in keys:
-        with open(join(KEYDIR, key), 'r') as sql_file:
-            sql_stmt = sql_file.read()
-        cursor.executescript(sql_stmt)
+        sql_stmt = open(join(KEYDIR, key)).read()
+        print sql_stmt
+        curs.execute(sql_stmt)
+    conn.commit()
 
 
-def init_db(tgt_db=TOKENDB):
+def init_db():
     """
     If a DB doens't already exist, just create one.
     :return:
     """
-    if not isfile(tgt_db):
-        with open(SCHEMAFILE) as infile:
-            sql_build_db = infile.read()
-        conn = sqlite3.connect(tgt_db)
-        curs = conn.cursor()
-        curs.executescript(sql_build_db)
-        conn.close()
+    conn, curs = dbconnect()
+
+    curs.execute(open(SCHEMAFILE, "r").read())
+    conn.commit()
+
 
 
 if __name__ == '__main__':

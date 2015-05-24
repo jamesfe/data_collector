@@ -3,6 +3,7 @@ A server that serves tokens for the gathering of social media.
 Twitter: @jimmysthoughts
 GitHub: github.com/jamesfe
 """
+from __future__ import (absolute_import, division, print_function, unicode_literals)
 
 from flask import Flask
 from os import listdir
@@ -31,7 +32,7 @@ def get_token(application):
     token_results = curs.fetchall()
     # Given some number of uses of the token, we
     for res in token_results:
-        print res
+        print(res)
         tokenid = res[0]
         usage_cutoff = int(time.time()) - res[1]
         usage_sql = "SELECT COUNT(*) as num_uses FROM token_use WHERE token_id=%s AND usage_time > %s"
@@ -83,7 +84,7 @@ def load_keys():
     keys = [_ for _ in listdir(KEYDIR) if _[-6:].lower() == 'sqlkey']
     for key in keys:
         sql_stmt = open(join(KEYDIR, key)).read()
-        print sql_stmt
+        print(sql_stmt)
         curs.execute(sql_stmt)
     conn.commit()
 

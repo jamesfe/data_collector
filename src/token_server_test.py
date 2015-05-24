@@ -3,6 +3,7 @@ A set of tests for our token server.
 Twitter: @jimmysthoughts
 GitHub: github.com/jamesfe
 """
+from __future__ import (absolute_import, division, print_function, unicode_literals)
 
 
 import unittest
